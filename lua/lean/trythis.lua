@@ -13,7 +13,9 @@ local function suggestions_from(diagnostic)
       suggestions,
       { replacement = vim.trim(suggestion, '\r\n'),
         lnum = diagnostic.lnum,
-        col = diagnostic.col }
+        col = diagnostic.col,
+        end_lnum = diagnostic.end_lnum,
+        end_col = diagnostic.end_col, }
     )
   end
   return suggestions
@@ -39,24 +41,15 @@ function trythis.swap()
 
       local start_row = suggestion.lnum
       local start_col = suggestion.col
-
-      vim.api.nvim_win_set_cursor(0, {start_row + 1, start_col})
-      local end_row, end_col = unpack(vim.fn.searchpos('\\>', 'cW'))
-
-      local rest = vim.api.nvim_buf_get_text(0, end_row - 1, end_col - 1, end_row - 1, -1, {})[1]
-      if rest:match('%s*[[{]') then
-        local bracket_row, bracket_col = unpack(vim.fn.searchpairpos('\\s\\*[[{]', '', '[\\]}]', 'cW'))
-        if bracket_row ~= 0 or bracket_col ~= 0 then
-          end_row, end_col = bracket_row, bracket_col + 1
-        end
-      end
+      local end_row = suggestion.end_lnum
+      local end_col = suggestion.end_col
 
       vim.api.nvim_buf_set_text(
         0,
         start_row,
         start_col,
-        end_row - 1,
-        end_col - 1,
+        end_row,
+        end_col,
         vim.split(suggestion.replacement, '\n')
       )
 
